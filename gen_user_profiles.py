@@ -2,7 +2,7 @@
 # -*- python -*-
 
 
-##TODO 
+##TODO
 # add support for batch loading and see the perf difference
 # add support for deletion as well
 
@@ -41,23 +41,23 @@ def main():
     parser.add_option("-f", "--dump_to_file", action="store_true", dest="dump_to_file", default=False,
                   help="Dump User Profiles to file(Default - False)")
     parser.add_option("-B", "--batch_size", dest="batch_size", type = "int", default = 1,
-                  help="Batch Size for Data Load")
+                  help="Batch Size for Data Load (Default - 1)")
     parser.add_option("-M", "--mutation_mode", dest="mutation_mode", type = "int", default = 0,
-                  help="Mutate data after loading. 0(Off) by default. 1 - 80/20(R/W). 2 - 50/50(R/W).")
+                  help="Mutate data after loading. 0(Off) - Default. 1 - 80/20(R/W). 2 - 50/50(R/W).")
 
 
     (options, args) = parser.parse_args()
-    
+
     profile_gen = UserProfileGenerator(options.mutation_mode)
-    
+
     random.seed(options.seed)
 
     json_loader = pick_json_loader(options)
-    
-    generate_and_load_user_profiles(profile_gen, json_loader, options) 
-    
+
+    generate_and_load_user_profiles(profile_gen, json_loader, options)
+
     if options.mutation_mode > 0:
-        mutate_user_profiles(profile_gen, json_loader, options)   
+        mutate_user_profiles(profile_gen, json_loader, options)
 
 
 def generate_and_load_user_profiles(profile_gen, json_loader, options):
@@ -73,7 +73,7 @@ def generate_and_load_user_profiles(profile_gen, json_loader, options):
 
         if options.with_orders:
             curr_profile = len(user_profiles) - 1
-            orders.append(order_gen.generate_orders_from_history(user_profiles[curr_profile]["shipped_order_history"]))
+            orders.append(order_gen.generate_orders_from_history(user_profiles[curr_profile]["profile_details"]["user_id"],   user_profiles[curr_profile]["shipped_order_history"]))
 
         if options.batch_size == 1:
             json_loader.write_one_json(user_profiles[0]["profile_details"]["user_id"], user_profiles[0])
@@ -98,7 +98,7 @@ def generate_and_load_user_profiles(profile_gen, json_loader, options):
 
 
 def pick_json_loader(options):
-    
+
     json_loader = 0
     if options.dump_to_file:
         json_loader = FileHelper()
@@ -115,7 +115,7 @@ def pick_json_loader(options):
     else:
         print "Loading Data to Couchbase using memcached client"
         json_loader = MemcachedHelper(options.server, 11211, options.bucket, options.password)
-            
+
     return json_loader
 
 def mutate_user_profiles(profile_gen, json_loader, options):
@@ -125,7 +125,7 @@ def mutate_user_profiles(profile_gen, json_loader, options):
     mutation_list = profile_gen.get_mutation_list()
 
     while True:
-        
+
         if options.num_user_profiles < 10:
             print "Too few docs to mutate. Need > 10"
             break
@@ -133,7 +133,7 @@ def mutate_user_profiles(profile_gen, json_loader, options):
             mutation_count_max = options.num_user_profiles - 10
         else:
             mutation_count_max = 9990
-        
+
         mutation_pick = random.randint(0, mutation_count_max)
 
         ##80/20(R/W)

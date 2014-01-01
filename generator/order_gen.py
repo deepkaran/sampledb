@@ -6,6 +6,7 @@ class Order(object):
 
     def __init__(self):
 
+        self.user_id = None
         self.order_id = None
         self.order_datetime = None
 
@@ -23,20 +24,20 @@ class Order(object):
         self.payment_mode = None
 
 class OrderGenerator(object):
-    
+
     def __init__(self):
         self.orders = []
 
-    def generate_orders_from_history(self, order_history_list):
+    def generate_orders_from_history(self, user_id, order_history_list):
 
         for i in xrange(len(order_history_list)):
-            order = self.generate_single_order(order_history_list[i])
+            order = self.generate_single_order(user_id, order_history_list[i])
             self.orders.append(self.package_order(order))
 
         return self.orders
 
     def package_order(self, order):
-     
+
         order_map = {}
         order_map["doc_type"] = "order"
         order_map["product_details"] = {}
@@ -44,6 +45,7 @@ class OrderGenerator(object):
         order_map["payment_details"] = {}
         order_map["order_details"] = {}
 
+        order_map["user_id"] = order.user_id
         order_map["order_details"]["order_id"] = order.order_id
         order_map["order_details"]["order_datetime"] = order.order_datetime
 
@@ -62,10 +64,11 @@ class OrderGenerator(object):
 
         return order_map
 
-    def generate_single_order(self, order_history):
+    def generate_single_order(self, user_id, order_history):
 
         self.order = Order()
-        
+
+        self.order.user_id = user_id
         self.order.order_id = order_history["order_id"]
         self.order.order_datetime = order_history["order_datetime"]
 
